@@ -55,7 +55,7 @@ ACME Rockets will only deploy software that's been scanned and approved by the A
 
   ```bash
   #LINUX, including WSL
-  curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v0.7.1-alpha.1/notation_0.7.1-alpha.1_linux_amd64.tar.gz
+  curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v0.11.0-alpha.4/notation_0.11.0-alpha.4_linux_amd64.tar.gz
   tar xvzf notation.tar.gz -C ~/bin notation
   ```
 
