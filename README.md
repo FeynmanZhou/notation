@@ -21,7 +21,7 @@ Notation is a CLI project to add signatures as standard items in the registry ec
 
 - Install the Notation CLI from [Notation Releases][notation-releases]:
     ```bash
-    curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v0.10.0-alpha.3/notation_0.10.0-alpha.3_linux_amd64.tar.gz
+    curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v0.11.0-alpha.4/notation_0.11.0-alpha.4_linux_amd64.tar.gz
     tar xvzf notation.tar.gz -C ~/bin notation
     ```
 - Run a local instance of the [CNCF Distribution Registry][cncf-distribution], with [ORAS Artifacts][artifact-manifest] support:
