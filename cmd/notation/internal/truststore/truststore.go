@@ -1,7 +1,20 @@
+// Copyright The Notary Project Authors.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package truststore
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
 	"errors"
@@ -37,9 +50,14 @@ func AddCert(path, storeType, namedStore string, display bool) error {
 		return errors.New("named store name needs to follow [a-zA-Z0-9_.-]+ format")
 	}
 
-	// check if the target path is a cert (support PEM and DER formats)
-	if _, err := corex509.ReadCertificateFile(certPath); err != nil {
+	// check if the target path is a x509 certificate
+	// (support PEM and DER formats)
+	certs, err := corex509.ReadCertificateFile(certPath)
+	if err != nil {
 		return err
+	}
+	if len(certs) == 0 {
+		return errors.New("no valid certificate found in the file")
 	}
 
 	// core process
@@ -48,6 +66,7 @@ func AddCert(path, storeType, namedStore string, display bool) error {
 	if err := CheckNonErrNotExistError(err); err != nil {
 		return err
 	}
+
 	// check if certificate already in the trust store
 	if _, err := os.Stat(filepath.Join(trustStorePath, filepath.Base(certPath))); err == nil {
 		return errors.New("certificate already exists in the Trust Store")
@@ -66,12 +85,12 @@ func AddCert(path, storeType, namedStore string, display bool) error {
 	return nil
 }
 
-// ListCerts walks through root and lists all x509 certificates in it,
+// ListCerts walks through root and returns all x509 certificates in it,
 // sub-dirs are ignored.
-func ListCerts(root string, depth int) error {
+func ListCerts(root string, depth int) ([]string, error) {
 	maxDepth := strings.Count(root, string(os.PathSeparator)) + depth
-
-	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	var certPaths []string
+	if err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -83,13 +102,20 @@ func ListCerts(root string, depth int) error {
 			return err
 		}
 		if info.Mode().IsRegular() {
-			if _, err := corex509.ReadCertificateFile(path); err != nil {
+			certs, err := corex509.ReadCertificateFile(path)
+			if err != nil {
 				return err
 			}
-			fmt.Println(path)
+			if len(certs) != 0 {
+				certPaths = append(certPaths, path)
+			}
 		}
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	return certPaths, nil
 }
 
 // ShowCerts writes out details of certificates
@@ -112,65 +138,60 @@ func showCert(cert *x509.Certificate) {
 	fmt.Println("Valid to:", cert.NotAfter)
 	fmt.Println("IsCA:", cert.IsCA)
 
-	h := sha1.Sum(cert.Raw)
-	fmt.Println("SHA1 Thumbprint:", strings.ToLower(hex.EncodeToString(h[:])))
+	h := sha256.Sum256(cert.Raw)
+	fmt.Println("SHA256 Thumbprint:", strings.ToLower(hex.EncodeToString(h[:])))
 }
 
 // DeleteAllCerts deletes all certificate files from the trust store
 // under dir truststore/x509/storeType/namedStore
-func DeleteAllCerts(storeType, namedStore string, confirmed bool, errorSlice []error) []error {
+func DeleteAllCerts(storeType, namedStore string, confirmed bool) error {
 	path, err := dir.ConfigFS().SysPath(dir.TrustStoreDir, "x509", storeType, namedStore)
-	if err == nil {
-		prompt := fmt.Sprintf("Are you sure you want to delete all certificate in %q of type %q?", namedStore, storeType)
-		confirmed, err := cmdutil.AskForConfirmation(os.Stdin, prompt, confirmed)
-		if err != nil {
-			errorSlice = append(errorSlice, fmt.Errorf("%s with error %q", path, err.Error()))
-			return errorSlice
-		}
-		if !confirmed {
-			return errorSlice
-		}
-
-		if err = os.RemoveAll(path); err != nil {
-			errorSlice = append(errorSlice, fmt.Errorf("%s with error %q", path, err.Error()))
-		} else {
-			// write out on success
-			fmt.Printf("Successfully deleted %s\n", path)
-			return nil
-		}
-	} else {
-		errorSlice = append(errorSlice, fmt.Errorf("%s with error %q", path, err.Error()))
+	if err != nil {
+		return err
 	}
-	return errorSlice
+	prompt := fmt.Sprintf("Are you sure you want to delete all certificates in %q of type %q?", namedStore, storeType)
+	confirmed, err = cmdutil.AskForConfirmation(os.Stdin, prompt, confirmed)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		return nil
+	}
+	if _, err = os.Stat(path); err != nil {
+		return err
+	}
+	if err = os.RemoveAll(path); err != nil {
+		return err
+	}
+	// write out on success
+	fmt.Printf("Successfully deleted %s\n", path)
+	return nil
 }
 
 // DeleteCert deletes a specific certificate file from the
 // trust store, namely truststore/x509/storeType/namedStore/cert
-func DeleteCert(storeType, namedStore, cert string, confirmed bool, errorSlice []error) []error {
+func DeleteCert(storeType, namedStore, cert string, confirmed bool) error {
 	path, err := dir.ConfigFS().SysPath(dir.TrustStoreDir, "x509", storeType, namedStore, cert)
-	if err == nil {
-		prompt := fmt.Sprintf("Are you sure you want to delete %q in %q of type %q?", cert, namedStore, storeType)
-		confirmed, err := cmdutil.AskForConfirmation(os.Stdin, prompt, confirmed)
-		if err != nil {
-			errorSlice = append(errorSlice, fmt.Errorf("%s with error %q", path, err.Error()))
-			return errorSlice
-		}
-		if !confirmed {
-			return errorSlice
-		}
-
-		if err = os.RemoveAll(path); err != nil {
-			errorSlice = append(errorSlice, fmt.Errorf("%s with error %q", path, err.Error()))
-		} else {
-			// write out on success
-			fmt.Printf("Successfully deleted %s\n", path)
-			return nil
-		}
-	} else {
-		errorSlice = append(errorSlice, fmt.Errorf("%s with error %q", path, err.Error()))
+	if err != nil {
+		return err
 	}
-
-	return errorSlice
+	prompt := fmt.Sprintf("Are you sure you want to delete %q in %q of type %q?", cert, namedStore, storeType)
+	confirmed, err = cmdutil.AskForConfirmation(os.Stdin, prompt, confirmed)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		return nil
+	}
+	if _, err := os.Stat(path); err != nil {
+		return err
+	}
+	if err = os.Remove(path); err != nil {
+		return err
+	}
+	// write out on success
+	fmt.Printf("Successfully deleted %s\n", cert)
+	return nil
 }
 
 // CheckNonErrNotExistError returns nil when no err or err is fs.ErrNotExist

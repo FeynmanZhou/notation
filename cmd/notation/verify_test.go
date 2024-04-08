@@ -1,3 +1,16 @@
+// Copyright The Notary Project Authors.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -14,7 +27,8 @@ func TestVerifyCommand_BasicArgs(t *testing.T) {
 			Username: "user",
 			Password: "password",
 		},
-		pluginConfig: []string{"key1=val1"},
+		pluginConfig:         []string{"key1=val1"},
+		maxSignatureAttempts: 100,
 	}
 	if err := command.ParseFlags([]string{
 		expected.reference,
@@ -37,13 +51,14 @@ func TestVerifyCommand_MoreArgs(t *testing.T) {
 	expected := &verifyOpts{
 		reference: "ref",
 		SecureFlagOpts: SecureFlagOpts{
-			PlainHTTP: true,
+			InsecureRegistry: true,
 		},
-		pluginConfig: []string{"key1=val1", "key2=val2"},
+		pluginConfig:         []string{"key1=val1", "key2=val2"},
+		maxSignatureAttempts: 100,
 	}
 	if err := command.ParseFlags([]string{
 		expected.reference,
-		"--plain-http",
+		"--insecure-registry",
 		"--plugin-config", "key1=val1",
 		"--plugin-config", "key2=val2"}); err != nil {
 		t.Fatalf("Parse Flag failed: %v", err)

@@ -1,3 +1,16 @@
+# Copyright The Notary Project Authors.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: Scorecards supply-chain security
 on:
   branch_protection_rule:
@@ -5,7 +18,9 @@ on:
     # Weekly on Saturdays.
     - cron: '30 1 * * 6'
   push:
-    branches: [ main ]
+    branches: 
+      - main
+      - release-*
     paths:
     - '!docs/**'
     - '!specs/**'
@@ -26,12 +41,12 @@ jobs:
     
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=3.0.2
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # tag=4.1.2
         with:
           persist-credentials: false
 
       - name: "Run analysis"
-        uses: ossf/scorecard-action@99c53751e09b9529366343771cc321ec74e9bd3d # tag=v2.0.6
+        uses: ossf/scorecard-action@0864cf19026789058feabb7e87baa5f140aac736 # tag=v2.3.1
         with:
           results_file: results.sarif
           results_format: sarif
@@ -39,13 +54,13 @@ jobs:
           publish_results: true
 
       - name: "Upload artifact"
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # tag=v3.1.1
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # tag=v4.3.1
         with:
           name: SARIF file
           path: results.sarif
           retention-days: 5
       
       - name: "Upload to code-scanning"
-        uses: github/codeql-action/upload-sarif@4c8f13758e748234abaa6a831d6f53981844a524 # tag=v2.1.26
+        uses: github/codeql-action/upload-sarif@1b1aada464948af03b950897e5eb522f92603cc2 # v3.24.9
         with:
           sarif_file: results.sarif

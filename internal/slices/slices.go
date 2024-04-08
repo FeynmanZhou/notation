@@ -1,27 +1,24 @@
+// Copyright The Notary Project Authors.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package slices
 
-type isser interface {
-	Is(string) bool
-}
-
-// Index returns the index of the first occurrence of name in s,
-// or -1 if not present.
-func Index[E isser](s []E, name string) int {
-	for i, v := range s {
-		if v.Is(name) {
-			return i
+// Contains reports whether v is present in s.
+func Contains[E comparable](s []E, v E) bool {
+	for _, vs := range s {
+		if v == vs {
+			return true
 		}
 	}
-	return -1
-}
-
-// Contains reports whether name is present in s.
-func Contains[E isser](s []E, name string) bool {
-	return Index(s, name) >= 0
-}
-
-// Delete removes the elements s[i:i+1] from s,
-// returning the modified slice.
-func Delete[S ~[]E, E isser](s S, i int) S {
-	return append(s[:i], s[i+1:]...)
+	return false
 }

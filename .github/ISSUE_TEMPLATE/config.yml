@@ -10,8 +10,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 blank_issues_enabled: false
 contact_links:
   - name: Ask a question
     url: https://slack.cncf.io/
-    about: "Join #notary-v2 channel on CNCF Slack"
+    about: "Join #notary-project channel on CNCF Slack"

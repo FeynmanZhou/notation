@@ -1,3 +1,16 @@
+// Copyright The Notary Project Authors.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cert
 
 import (
@@ -28,12 +41,22 @@ func certAddCommand(opts *certAddOpts) *cobra.Command {
 			opts.path = args
 			return nil
 		},
+		Long: `Add certificates to the trust store
+
+Example - Add a certificate to the "ca" type of a named store "acme-rockets":
+  notation cert add --type ca --store acme-rockets acme-rockets.crt
+
+Example - Add a certificate to the "signingAuthority" type of a named store "wabbit-networks":
+  notation cert add --type signingAuthority --store wabbit-networks wabbit-networks.pem
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return addCerts(opts)
 		},
 	}
 	command.Flags().StringVarP(&opts.storeType, "type", "t", "", "specify trust store type, options: ca, signingAuthority")
 	command.Flags().StringVarP(&opts.namedStore, "store", "s", "", "specify named store")
+	command.MarkFlagRequired("type")
+	command.MarkFlagRequired("store")
 	return command
 }
 

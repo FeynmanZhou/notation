@@ -1,3 +1,16 @@
+// Copyright The Notary Project Authors.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package configutil
 
 import (
@@ -5,7 +18,6 @@ import (
 	"strings"
 
 	"github.com/notaryproject/notation-go/config"
-	"github.com/notaryproject/notation/internal/slices"
 )
 
 var (
@@ -30,25 +42,15 @@ func IsRegistryInsecure(target string) bool {
 // ResolveKey resolves the key by name.
 // The default key is attempted if name is empty.
 func ResolveKey(name string) (config.KeySuite, error) {
-	signingKeys, err := LoadSigningkeysOnce()
+	signingKeys, err := config.LoadSigningKeys()
 	if err != nil {
 		return config.KeySuite{}, err
 	}
 
 	// if name is empty, look for default signing key
 	if name == "" {
-		name = signingKeys.Default
+		return signingKeys.GetDefault()
+	}
 
-		// if name is still empty, return error
-		if name == "" {
-			return config.KeySuite{}, errors.New("default signing key not set." +
-				" Please set default singing key or specify a key name")
-		}
-	}
-	
-	idx := slices.Index(signingKeys.Keys, name)
-	if idx < 0 {
-		return config.KeySuite{}, ErrKeyNotFound
-	}
-	return signingKeys.Keys[idx], nil
+	return signingKeys.Get(name)
 }

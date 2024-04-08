@@ -80,23 +80,27 @@ Aliases:
   list, ls
 
 Flags:
+  -d, --debug          debug mode
   -h, --help           help for list
   -s, --store string   specify named store
   -t, --type string    specify trust store type, options: ca, signingAuthority
+  -v, --verbose        verbose mode
 ```
 
 ### notation certificate show
 
 ```text
-Show certificate details given trust store type, named store, and certificate file name. If the certificate file contains multiple certificates, then all certificates are displayed.
+Show certificate details of given trust store name, trust store type, and certificate file name. If the certificate file contains multiple certificates, then all certificates are displayed.
 
 Usage:
   notation certificate show --type <type> --store <name> [flags] <cert_fileName>
 
 Flags:
+  -d, --debug          debug mode
   -h, --help           help for show
   -s, --store string   specify named store
   -t, --type string    specify trust store type, options: ca, signingAuthority
+  -v, --verbose        verbose mode
 ```
 
 ### notation certificate delete
@@ -106,9 +110,6 @@ Delete certificates from the trust store.
 
 Usage:
   notation certificate delete --type <type> --store <name> [flags] (--all | <cert_fileName>)
-
-Aliases:
-  delete, rm
 
 Flags:
   -a, --all            delete all certificates in the named store
@@ -127,9 +128,9 @@ Usage:
   notation certificate generate-test [flags] <common_name>
 
 Flags:
-  -b, --bits int      RSA key bits (default 2048)
-  -d, --default       mark as default signing key
-  -h, --help          help for generate-test
+  -b, --bits int   RSA key bits (default 2048)
+      --default    mark as default signing key
+  -h, --help       help for generate-test
 ```
 
 ## Usage
@@ -150,15 +151,23 @@ Upon successful adding, the certificate files are added into directory`{NOTATION
 notation certificate list
 ```
 
-Upon successful listing, all the certificate files in the trust store are printed out in a format of absolute filepath. If the listing fails, an error message is printed out with specific reasons. Nothing is printed out if the trust store is empty.
+Upon successful listing, all the certificate files in the trust store are printed out with information of store type, store name and certificate file name. If the listing fails, an error message is printed out with specific reasons. Nothing is printed out if the trust store is empty.
 
+An example of the output:
+```
+STORE TYPE         STORE NAME   CERTIFICATE   
+ca                 myStore1     cert1.pem    
+ca                 myStore2     cert2.crt       
+signingAuthority   myStore1     cert3.crt    
+signingAuthority   myStore2     cert4.pem
+```
 ### List all certificate files of a certain named store
 
 ```bash
 notation cert list --store <name>
 ```
 
-Upon successful listing, all the certificate files in the trust store named `<name>` are printed out in a format of absolute filepath. If the listing fails, an error message is printed out with specific reasons. Nothing is printed out if the trust store is empty.
+Upon successful listing, all the certificate files in the trust store named `<name>` are printed out with information of store type, store name and certificate file name. If the listing fails, an error message is printed out with specific reasons. Nothing is printed out if the trust store is empty.
 
 ### List all certificate files of a certain type of store
 
@@ -166,7 +175,7 @@ Upon successful listing, all the certificate files in the trust store named `<na
 notation cert list --type <type>
 ```
 
-Upon successful listing, all the certificate files in the trust store of type `<type>` are printed out in a format of absolute filepath. If the listing fails, an error message is printed out with specific reasons. Nothing is printed out if the trust store is empty.
+Upon successful listing, all the certificate files in the trust store of type `<type>` are printed out with information of store type, store name and certificate file name. If the listing fails, an error message is printed out with specific reasons. Nothing is printed out if the trust store is empty.
 
 ### List all certificate files of a certain named store of a certain type
 
@@ -174,7 +183,7 @@ Upon successful listing, all the certificate files in the trust store of type `<
 notation cert list --type <type> --store <name>
 ```
 
-Upon successful listing, all the certificate files in the trust store named `<name>` of type `<type>` are printed out in a format of absolute filepath. If the listing fails, an error message is printed out with specific reasons. Nothing is printed out if the trust store is empty.
+Upon successful listing, all the certificate files in the trust store named `<name>` of type `<type>` are printed out with information of store type, store name and certificate file name. If the listing fails, an error message is printed out with specific reasons. Nothing is printed out if the trust store is empty.
 
 ### Show details of a certain certificate file
 
@@ -207,7 +216,17 @@ A prompt is showed asking user to confirm the deletion. Upon successful deletion
 notation certificate delete --type <type> --store <name> <cert_fileName>
 ```
 
-A prompt is showed asking user to confirm the deletion. Upon successful deletion, the specific certificate is deleted in trust store named `<name>` of type `<type>`. If deletion fails, an error message with specific reasons is printed out.
+A prompt is displayed, asking the user to confirm the deletion. Upon successful deletion, the specific certificate is deleted from the trust store named `<name>` of type `<type>`. The output message is printed out as following:
+
+```text
+Successfully deleted <cert_fileName> from the trust store. 
+```
+
+If users execute the deletion without specifying required flags using `notation cert delete <cert_fileName>`, the deletion fails and the error output message is printed out as follows:
+
+```text
+Error: required flag(s) "store", "type" not set
+```
 
 ### Generate a local RSA key and a corresponding self-generated certificate for testing purpose and add the certificate into trust store
 

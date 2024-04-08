@@ -1,8 +1,24 @@
+# Copyright The Notary Project Authors.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: build
 
 on:
   push:
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -11,17 +27,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: [1.19]
+        go-version: ['1.20']
       fail-fast: true
     steps:
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version: ${{ matrix.go-version }}
+          check-latest: true
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
       - name: Cache Go modules
-        uses: actions/cache@v3
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         id: go-mod-cache
         with:
           path: ~/go/pkg/mod
@@ -34,5 +51,12 @@ jobs:
         run: make build
       - name: Run unit tests
         run: make test
+      - name: Run e2e tests
+        run:  |
+          if [[ $GITHUB_REF_NAME == v* && $GITHUB_REF_TYPE == tag ]]; then
+            make e2e
+          else
+            make e2e-covdata
+          fi
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@c16abc29c95fcf9174b58eb7e1abf4c866893bc8 # v4.1.1
